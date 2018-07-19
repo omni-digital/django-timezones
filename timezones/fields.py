@@ -35,14 +35,10 @@ class TimeZoneField(models.CharField):
         return super(TimeZoneField, self).run_validators(smart_str(value))
 
     def from_db_value(self, value, expression, connection, context):
-        if value is None:
-            return value
         return coerce_timezone_value(value)
     
     def to_python(self, value):
         value = super(TimeZoneField, self).to_python(value)
-        if value is None:
-            return None # null=True
         return coerce_timezone_value(value)
     
     def get_prep_value(self, value):
