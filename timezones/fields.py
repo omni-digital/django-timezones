@@ -16,8 +16,6 @@ default_tz = pytz.timezone(getattr(settings, "TIME_ZONE", "UTC"))
 
 class TimeZoneField(models.CharField):
     
-    __metaclass__ = models.SubfieldBase
-    
     def __init__(self, *args, **kwargs):
         validate_timezone_max_length(MAX_TIMEZONE_LENGTH, zones.ALL_TIMEZONE_CHOICES)
         defaults = {
@@ -35,11 +33,12 @@ class TimeZoneField(models.CharField):
     def run_validators(self, value):
         # coerce value back to a string to validate correctly
         return super(TimeZoneField, self).run_validators(smart_str(value))
+
+    def from_db_value(self, value, expression, connection, context):
+        return coerce_timezone_value(value)
     
     def to_python(self, value):
         value = super(TimeZoneField, self).to_python(value)
-        if value is None:
-            return None # null=True
         return coerce_timezone_value(value)
     
     def get_prep_value(self, value):
