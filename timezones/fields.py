@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.db import models
 from django.db.models import signals
-from django.utils.encoding import smart_unicode, smart_str
+from django.utils.encoding import smart_text, smart_str
 
 import pytz
 
@@ -15,7 +15,7 @@ default_tz = pytz.timezone(getattr(settings, "TIME_ZONE", "UTC"))
 
 
 class TimeZoneField(models.CharField):
-    
+
     def __init__(self, *args, **kwargs):
         validate_timezone_max_length(MAX_TIMEZONE_LENGTH, zones.ALL_TIMEZONE_CHOICES)
         defaults = {
@@ -25,38 +25,38 @@ class TimeZoneField(models.CharField):
         }
         defaults.update(kwargs)
         return super(TimeZoneField, self).__init__(*args, **defaults)
-    
+
     def validate(self, value, model_instance):
         # coerce value back to a string to validate correctly
         return super(TimeZoneField, self).validate(smart_str(value), model_instance)
-    
+
     def run_validators(self, value):
         # coerce value back to a string to validate correctly
         return super(TimeZoneField, self).run_validators(smart_str(value))
 
     def from_db_value(self, value, expression, connection, context):
         return coerce_timezone_value(value)
-    
+
     def to_python(self, value):
         value = super(TimeZoneField, self).to_python(value)
         return coerce_timezone_value(value)
-    
+
     def get_prep_value(self, value):
         if value is not None:
-            return smart_unicode(value)
+            return smart_text(value)
         return value
-    
+
     def get_db_prep_save(self, value, connection=None):
         """
         Prepares the given value for insertion into the database.
         """
         return self.get_prep_value(value)
-    
+
     def flatten_data(self, follow, obj=None):
         value = self._get_val_from_obj(obj)
         if value is None:
             value = ""
-        return {self.attname: smart_unicode(value)}
+        return {self.attname: smart_text(value)}
 
 
 class LocalizedDateTimeField(models.DateTimeField):
@@ -67,21 +67,21 @@ class LocalizedDateTimeField(models.DateTimeField):
     result.
     """
     def __init__(self, verbose_name=None, name=None, timezone=None, **kwargs):
-        if isinstance(timezone, basestring):
+        if isinstance(timezone, str):
             timezone = smart_str(timezone)
         if timezone in pytz.all_timezones_set:
             self.timezone = pytz.timezone(timezone)
         else:
             self.timezone = timezone
         super(LocalizedDateTimeField, self).__init__(verbose_name, name, **kwargs)
-    
+
     def formfield(self, **kwargs):
         defaults = {"form_class": forms.LocalizedDateTimeField}
-        if (not isinstance(self.timezone, basestring) and str(self.timezone) in pytz.all_timezones_set):
+        if (not isinstance(self.timezone, str) and str(self.timezone) in pytz.all_timezones_set):
             defaults["timezone"] = str(self.timezone)
         defaults.update(kwargs)
         return super(LocalizedDateTimeField, self).formfield(**defaults)
-    
+
     def get_db_prep_save(self, value, connection=None):
         """
         Returns field's value prepared for saving into a database.
@@ -93,7 +93,7 @@ class LocalizedDateTimeField(models.DateTimeField):
             else:
                 value = value.astimezone(default_tz)
         return super(LocalizedDateTimeField, self).get_db_prep_save(value, connection=connection)
-    
+
     def get_db_prep_lookup(self, lookup_type, value, connection=None, prepared=None):
         """
         Returns field's value prepared for database lookup.
@@ -117,7 +117,7 @@ def prep_localized_datetime(sender, **kwargs):
             if dt.tzinfo is None:
                 dt = default_tz.localize(dt)
             time_zone = field.timezone
-            if isinstance(field.timezone, basestring):
+            if isinstance(field.timezone, str):
                 tz_name = instance._default_manager.filter(
                     pk=model_instance._get_pk_val()
                 ).values_list(field.timezone)[0][0]
@@ -134,7 +134,7 @@ def prep_localized_datetime(sender, **kwargs):
                     #)
             elif callable(time_zone):
                 tz_name = time_zone()
-                if isinstance(tz_name, basestring):
+                if isinstance(tz_name, str):
                     try:
                         time_zone = pytz.timezone(tz_name)
                     except:
