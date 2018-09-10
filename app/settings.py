@@ -8,10 +8,11 @@ INSTALLED_APPS = [
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
+    'timezones',
 ]
 
 MIDDLEWARE_CLASSES = []
-# 
+#
 # ROOT_URLCONF = 'app.urls'
 
 SECRET_KEY = 'test'
