@@ -67,7 +67,7 @@ class LocalizedDateTimeField(models.DateTimeField):
     result.
     """
     def __init__(self, verbose_name=None, name=None, timezone=None, **kwargs):
-        if isinstance(timezone, basestring):
+        if isinstance(timezone, str):
             timezone = smart_str(timezone)
         if timezone in pytz.all_timezones_set:
             self.timezone = pytz.timezone(timezone)
@@ -77,7 +77,7 @@ class LocalizedDateTimeField(models.DateTimeField):
     
     def formfield(self, **kwargs):
         defaults = {"form_class": forms.LocalizedDateTimeField}
-        if (not isinstance(self.timezone, basestring) and str(self.timezone) in pytz.all_timezones_set):
+        if (not isinstance(self.timezone, str) and str(self.timezone) in pytz.all_timezones_set):
             defaults["timezone"] = str(self.timezone)
         defaults.update(kwargs)
         return super(LocalizedDateTimeField, self).formfield(**defaults)
@@ -117,7 +117,7 @@ def prep_localized_datetime(sender, **kwargs):
             if dt.tzinfo is None:
                 dt = default_tz.localize(dt)
             time_zone = field.timezone
-            if isinstance(field.timezone, basestring):
+            if isinstance(field.timezone, str):
                 tz_name = instance._default_manager.filter(
                     pk=model_instance._get_pk_val()
                 ).values_list(field.timezone)[0][0]
@@ -134,7 +134,7 @@ def prep_localized_datetime(sender, **kwargs):
                     #)
             elif callable(time_zone):
                 tz_name = time_zone()
-                if isinstance(tz_name, basestring):
+                if isinstance(tz_name, str):
                     try:
                         time_zone = pytz.timezone(tz_name)
                     except:
